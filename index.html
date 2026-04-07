@@ -1,337 +1,144 @@
-
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>進階影片播放器</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        #videoPlayer {
-            width: 100%;
-            height: auto;
-            background: #000;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 15px;
-            justify-content: center;
-        }
-        button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
-            background-color: #007aff;
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #005bb5;
-        }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        .speed-control button {
-            background-color: #34c759;
-        }
-        .speed-control button:hover {
-            background-color: #28a745;
-        }
-        .info-bar {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-        /* 縮圖拖曳區 */
-        .seek-container {
-            position: relative;
-            height: 8px;
-            background: #ddd;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-        #progress-bar {
-            position: absolute;
-            height: 100%;
-            background: #007aff;
-            border-radius: 4px;
-            width: 0%;
-            top: 0;
-            left: 0;
-        }
-        #scrubber {
-            position: absolute;
-            top: -5px;
-            width: 12px;
-            height: 20px;
-            background: #fff;
-            border: 2px solid #007aff;
-            border-radius: 50%;
-            transform: translateX(-50%);
-            cursor: grab;
-            z-index: 10;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Video Editor - FFmpeg</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Updated FFmpeg WASM Scripts -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js" type="8e46a0418f70e54577fa8331-text/javascript"></script>
+    <script src="https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js" type="8e46a0418f70e54577fa8331-text/javascript"></script>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1>Browser Video Editor</h1>
+            <p>Edit videos directly in your browser using FFmpeg</p>
+        </header>
 
-<div class="container">
-    <h2>影片播放器</h2>
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p>Drag & drop your video here or click to browse</p>
+                <input type="file" id="videoInput" accept="video/*" hidden>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <p id="ffmpegStatus" style="color: #7f8c8d; font-size: 0.9rem;">Initializing video processor...</p>
+            </div>
+        </div>
 
-    <!-- 影片選擇器 -->
-    <input type="file" id="videoFile" accept="video/*" style="margin-bottom: 15px;">
+        <div id="editorSection" class="editor-section" style="display: none;">
+            <div class="video-preview">
+                <video id="videoPlayer" controls></video>
+                <div class="video-info">
+                    <span id="videoName"></span>
+                    <span id="videoDuration"></span>
+                </div>
+            </div>
 
-    <!-- 影片播放器 -->
-    <video id="videoPlayer" controls></video>
+            <div class="controls-section">
+                <div class="trim-controls">
+                    <h3>Trim Video</h3>
+                    <div class="time-inputs">
+                        <div class="time-input">
+                            <label>Start Time</label>
+                            <input type="number" id="startTime" min="0" step="0.1" value="0" placeholder="0">
+                            <span>seconds</span>
+                        </div>
+                        <div class="time-input">
+                            <label>End Time</label>
+                            <input type="number" id="endTime" min="0" step="0.1" placeholder="10">
+                            <span>seconds</span>
+                        </div>
+                    </div>
+                    <button id="trimBtn" class="btn btn-primary">Trim Video</button>
+                </div>
 
-    <!-- 播放控制 -->
-    <div class="controls">
-        <button id="playPauseBtn">播放</button>
-        <button id="rewindBtn">⏪ 前退 5s</button>
-        <button id="forwardBtn">⏩ 前進 5s</button>
-        <button id="saveFrameBtn">📸 儲存畫面</button>
+                <div class="effects-controls">
+                    <h3>Video Effects</h3>
+                    <div class="effects-grid">
+                        <button class="effect-btn" data-effect="grayscale">Grayscale</button>
+                        <button class="effect-btn" data-effect="blur">Blur</button>
+                        <button class="effect-btn" data-effect="sharpen">Sharpen</button>
+                        <button class="effect-btn" data-effect="vintage">Vintage</button>
+                    </div>
+                </div>
+
+                <div class="resize-controls">
+                    <h3>Resize Video</h3>
+                    <div class="resize-options">
+                        <select id="resizeSelect">
+                            <option value="">Original Size</option>
+                            <option value="1920x1080">1080p (1920x1080)</option>
+                            <option value="1280x720">720p (1280x720)</option>
+                            <option value="854x480">480p (854x480)</option>
+                            <option value="640x360">360p (640x360)</option>
+                        </select>
+                        <button id="resizeBtn" class="btn btn-primary">Resize</button>
+                    </div>
+                </div>
+
+                <div class="format-controls">
+                    <h3>Convert Format</h3>
+                    <div class="format-options">
+                        <select id="formatSelect">
+                            <option value="mp4">MP4</option>
+                            <option value="webm">WebM</option>
+                            <option value="avi">AVI</option>
+                            <option value="mov">MOV</option>
+                            <option value="gif">GIF</option>
+                        </select>
+                        <button id="convertBtn" class="btn btn-primary">Convert</button>
+                    </div>
+                </div>
+
+                <div class="audio-controls">
+                    <h3>Audio Options</h3>
+                    <div class="audio-options">
+                        <button id="muteBtn" class="btn btn-secondary">Remove Audio</button>
+                        <div class="volume-control">
+                            <label>Volume</label>
+                            <input type="range" id="volumeSlider" min="0" max="200" value="100">
+                            <span id="volumeValue">100%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="export-section">
+                <button id="exportBtn" class="btn btn-success btn-large">Export Video</button>
+                <button id="resetBtn" class="btn btn-secondary">Reset All Changes</button>
+            </div>
+        </div>
+
+        <div id="processingModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>Processing Video...</h3>
+                <div class="progress-bar">
+                    <div id="progressBarFill" class="progress-bar-fill"></div>
+                </div>
+                <p id="progressText">Initializing FFmpeg...</p>
+            </div>
+        </div>
+
+        <div id="outputSection" class="output-section" style="display: none;">
+            <h3>Processed Video</h3>
+            <video id="outputVideo" controls></video>
+            <div class="output-actions">
+                <button id="downloadBtn" class="btn btn-success">Download Video</button>
+                <button id="newVideoBtn" class="btn btn-primary">Edit Another Video</button>
+            </div>
+        </div>
     </div>
 
-    <!-- 播放速度控制 -->
-    <div class="controls speed-control">
-        <button data-speed="0.1">0.1x</button>
-        <button data-speed="0.5">0.5x</button>
-        <button data-speed="1" class="active">1x</button>
-        <button data-speed="2">2x</button>
-        <button data-speed="1/30">1 FPS</button>
-    </div>
+    <footer>
+        <p>Powered by FFmpeg WASM - All processing happens in your browser</p>
+    </footer>
 
-    <!-- 進度條與資訊 -->
-    <div class="info-bar">
-        <span id="timeDisplay">00:00 / 00:00</span>
-        <span id="frameDisplay">Frame: 0</span>
-    </div>
-    <div class="seek-container" id="seekContainer">
-        <div id="progress-bar"></div>
-        <div id="scrubber"></div>
-    </div>
-</div>
-
-<script>
-    const video = document.getElementById('videoPlayer');
-    const videoFile = document.getElementById('videoFile');
-    const playPauseBtn = document.getElementById('playPauseBtn');
-    const rewindBtn = document.getElementById('rewindBtn');
-    const forwardBtn = document.getElementById('forwardBtn');
-    const saveFrameBtn = document.getElementById('saveFrameBtn');
-    const speedButtons = document.querySelectorAll('.speed-control button');
-    const timeDisplay = document.getElementById('timeDisplay');
-    const frameDisplay = document.getElementById('frameDisplay');
-    const seekContainer = document.getElementById('seekContainer');
-    const progressBar = document.getElementById('progress-bar');
-    const scrubber = document.getElementById('scrubber');
-
-    let isPlaying = false;
-    let currentSpeed = 1.0;
-    let lastTime = 0;
-    let frameCount = 0;
-
-    // --- 1. 影片選擇與載入 ---
-    videoFile.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const fileURL = URL.createObjectURL(file);
-            video.src = fileURL;
-            video.load();
-            // 載入完成後，更新時間顯示
-            video.onloadedmetadata = () => {
-                timeDisplay.textContent = `00:00 / ${formatTime(video.duration)}`;
-                console.log("影片載入完成。");
-            };
-        }
-    });
-
-    // --- 2. 播放控制 ---
-    playPauseBtn.addEventListener('click', () => {
-        if (video.paused || video.ended) {
-            video.play();
-            isPlaying = true;
-            playPauseBtn.textContent = '暫停';
-        } else {
-            video.pause();
-            isPlaying = false;
-            playPauseBtn.textContent = '播放';
-        }
-    });
-
-    rewindBtn.addEventListener('click', () => {
-        video.currentTime = Math.max(0, video.currentTime - 5);
-    });
-
-    forwardBtn.addEventListener('click', () => {
-        video.currentTime = Math.min(video.duration, video.currentTime + 5);
-    });
-
-    // --- 3. 儲存畫面 ---
-    saveFrameBtn.addEventListener('click', () => {
-        if (video.readyState >= 2) { // 確保有足夠的數據
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // 觸發下載
-            const link = document.createElement('a');
-            link.download = `frame_${Date.now()}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        } else {
-            alert("請先播放影片以確保有畫面可供儲存。");
-        }
-    });
-
-    // --- 4. 播放速度控制 ---
-    speedButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const newSpeed = parseFloat(button.dataset.speed);
-            video.playbackRate = newSpeed;
-            currentSpeed = newSpeed;
-            
-            // 更新按鈕樣式
-            speedButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            
-            console.log(`播放速度設定為: ${newSpeed}x`);
-        });
-    });
-
-    // --- 5. 進度條與時間更新 (核心邏輯) ---
-    video.addEventListener('timeupdate', () => {
-        if (!isPlaying) return;
-
-        // 更新時間顯示
-        const currentTime = video.currentTime;
-        const duration = video.duration;
-        timeDisplay.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
-
-        // 更新進度條
-        const progress = (currentTime / duration) * 100;
-        progressBar.style.width = `${progress}%`;
-
-        // 更新縮圖位置
-        const scrubberPos = progress;
-        scrubber.style.left = `${scrubberPos}%`;
-
-        // 估算 FPS (非常粗略的估算，基於時間)
-        // 這裡我們假設一個標準的播放週期，並在播放時累計幀數
-        // 由於瀏覽器不提供原始 FPS，我們只能在播放時模擬或依賴播放器內建的幀率
-        // 為了符合要求，我們在 timeupdate 中模擬幀數的增加
-        frameCount++;
-        frameDisplay.textContent = `Frame: ${frameCount}`;
-    });
-
-    // 處理影片結束
-    video.addEventListener('ended', () => {
-        isPlaying = false;
-        playPauseBtn.textContent = '播放';
-        console.log("影片播放結束。");
-    });
-
-    // --- 6. 縮圖拖曳功能 (Seek) ---
-    let isDragging = false;
-    
-    seekContainer.addEventListener('mousedown', (e) => {
-        if (e.target.id === 'scrubber') {
-            isDragging = true;
-            scrubber.style.cursor = 'grabbing';
-        }
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        
-        const rect = seekContainer.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        
-        // 限制在容器內
-        x = Math.max(0, Math.min(rect.width, x));
-        
-        const percentage = (x / rect.width) * 100;
-        
-        // 設置縮圖位置
-        scrubber.style.left = `${percentage}%`;
-        
-        // 設置影片時間
-        video.currentTime = (percentage / 100) * video.duration;
-    });
-
-    document.addEventListener('mouseup', () => {
-        if (isDragging) {
-            isDragging = false;
-            scrubber.style.cursor = 'pointer';
-        }
-    });
-
-    // 支援觸控事件 (iPhone 必須)
-    seekContainer.addEventListener('touchstart', (e) => {
-        isDragging = true;
-        scrubber.style.cursor = 'grabbing';
-        e.preventDefault(); // 防止手機捲動
-    });
-
-    document.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        e.preventDefault();
-        
-        const rect = seekContainer.getBoundingClientRect();
-        let touch = e.touches[0];
-        let x = touch.clientX - rect.left;
-        
-        x = Math.max(0, Math.min(rect.width, x));
-        
-        const percentage = (x / rect.width) * 100;
-        
-        scrubber.style.left = `${percentage}%`;
-        video.currentTime = (percentage / 100) * video.duration;
-    });
-
-    document.addEventListener('touchend', () => {
-        if (isDragging) {
-            isDragging = false;
-            scrubber.style.cursor = 'pointer';
-        }
-    });
-
-    // --- 輔助函數 ---
-    function formatTime(seconds) {
-        if (isNaN(seconds)) return "00:00";
-        const minutes = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    }
-
-</script>
-
-</body>
+    <script src="js/app.js" type="8e46a0418f70e54577fa8331-text/javascript"></script>
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="8e46a0418f70e54577fa8331-|49" defer></script></body>
 </html>
