@@ -433,10 +433,7 @@ async function initFFmpeg() {
         ffmpegLoaded = true;
         console.log('FFmpeg loaded successfully');
       }
-    } catch (error) {
-      console.error('Failed to load FFmpeg:', error);
-      throw error;
-    }
+
   }
   return ffmpeg;
 }
