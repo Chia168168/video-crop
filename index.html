@@ -1,952 +1,1547 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teng Video Editor</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teng Video Crop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --color-bg: #f7f6f2;
-      --color-surface: #ffffff;
-      --color-surface-2: #f3f0ec;
-      --color-border: #dcd9d5;
-      --color-text: #28251d;
-      --color-text-muted: #7a7974;
-      --color-primary: #01696f;
-      --color-primary-hover: #0c4e54;
-      --color-success: #437a22;
-      --color-success-hover: #2e5c10;
-      --color-error: #a12c7b;
-      --radius-sm: 0.375rem;
-      --radius-md: 0.5rem;
-      --radius-lg: 0.75rem;
-      --radius-xl: 1rem;
-      --space-2: 0.5rem;
-      --space-3: 0.75rem;
-      --space-4: 1rem;
-      --space-6: 1.5rem;
-      --space-8: 2rem;
-      --space-10: 2.5rem;
-      --space-12: 3rem;
-      --shadow-sm: 0 1px 2px oklch(0.2 0.01 80 / 0.06);
-      --shadow-md: 0 4px 12px oklch(0.2 0.01 80 / 0.08);
-      --shadow-lg: 0 12px 32px oklch(0.2 0.01 80 / 0.12);
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --surface-2: #f5f5f5;
+      --surface-3: #f0f0f0;
+      --text: #111111;
+      --text-muted: #666666;
+      --text-faint: #8a8a8a;
+      --border: #e5e5e5;
+      --primary: #111111;
+      --primary-hover: #000000;
+      --accent: #0070f3;
+      --success: #0f8f4f;
+      --warning: #b7791f;
+      --error: #d12f6a;
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 18px;
+      --radius-xl: 24px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 10px 30px rgba(0,0,0,.06);
+      --shadow-lg: 0 24px 60px rgba(0,0,0,.10);
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-10: 40px;
+      --space-12: 48px;
       --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
-      font-family: 'Inter', sans-serif;
-      background: var(--color-bg);
-      color: var(--color-text);
       min-height: 100dvh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: radial-gradient(circle at top, #ffffff 0%, #fafafa 45%, #f5f5f5 100%);
+      color: var(--text);
       line-height: 1.6;
-      font-size: 1rem;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
-    .container { max-width: 960px; margin: 0 auto; padding: var(--space-8) var(--space-4); }
+    button, input, select { font: inherit; }
+    button { border: 0; background: none; cursor: pointer; }
+    img, video, svg { display: block; max-width: 100%; }
 
-    header {
-      text-align: center;
-      margin-bottom: var(--space-10);
+    .page-shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 20px 80px;
     }
-    header h1 {
-      font-size: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
-      font-weight: 600;
-      color: var(--color-text);
-      margin-bottom: var(--space-2);
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 42px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      background: #111;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      box-shadow: var(--shadow-sm);
+      flex-shrink: 0;
+    }
+
+    .brand-mark svg { width: 18px; height: 18px; }
+
+    .brand-text strong {
+      display: block;
+      font-size: 14px;
+      line-height: 1.1;
       letter-spacing: -0.02em;
     }
-    header p { color: var(--color-text-muted); font-size: 0.95rem; }
 
-    .upload-section { margin-bottom: var(--space-6); }
-    .upload-area {
-      border: 2px dashed var(--color-border);
-      border-radius: var(--radius-xl);
-      padding: clamp(var(--space-8), 6vw, var(--space-12));
-      text-align: center;
-      background: var(--color-surface);
-      cursor: pointer;
-      transition: border-color var(--transition), background var(--transition);
+    .brand-text span {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
     }
-    .upload-area:hover { border-color: var(--color-primary); background: #f0f9f9; }
-    .upload-area.dragover { border-color: var(--color-success); background: #f0f7ec; }
-    .upload-area svg { color: var(--color-primary); margin: 0 auto var(--space-4); display: block; }
-    .upload-area p { color: var(--color-text-muted); font-size: 0.95rem; }
 
-    .upload-status { text-align: center; margin-top: var(--space-4); min-height: 1.5rem; }
-    #ffmpegStatus { font-size: 0.875rem; color: var(--color-text-muted); }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 28px;
+    }
 
-    .editor-section, .output-section {
-      background: var(--color-surface);
-      border-radius: var(--radius-xl);
-      padding: var(--space-8);
+    .hero-copy,
+    .hero-card,
+    .panel,
+    .output-panel {
+      background: rgba(255,255,255,0.84);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0,0,0,.06);
       box-shadow: var(--shadow-md);
-      margin-bottom: var(--space-6);
+      border-radius: var(--radius-xl);
+    }
+
+    .hero-copy {
+      padding: clamp(24px, 5vw, 44px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 280px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      margin-bottom: 18px;
+      letter-spacing: .02em;
+    }
+
+    .hero-copy h1 {
+      font-size: clamp(34px, 5vw, 60px);
+      line-height: 1.02;
+      letter-spacing: -0.05em;
+      font-weight: 700;
+      max-width: 12ch;
+      margin-bottom: 14px;
+    }
+
+    .hero-copy p {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 55ch;
+    }
+
+    .hero-note {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .hero-note span {
+      font-size: 13px;
+      color: var(--text-faint);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+    }
+
+    .hero-card {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      position: relative;
+      min-height: 280px;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -20% -35% auto;
+      width: 240px;
+      height: 240px;
+      background: radial-gradient(circle, rgba(0,112,243,.18) 0%, rgba(0,112,243,.06) 35%, rgba(255,255,255,0) 70%);
+      pointer-events: none;
+    }
+
+    .mini-window {
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,.06);
+      background: #fff;
+      box-shadow: 0 10px 40px rgba(0,0,0,.06);
+      position: relative;
+      z-index: 1;
+    }
+
+    .mini-window-top {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      background: #fafafa;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #ddd;
+    }
+
+    .mini-window-body {
+      display: grid;
+      grid-template-columns: 1.3fr .7fr;
+      min-height: 170px;
+    }
+
+    .fake-video {
+      background: linear-gradient(135deg, #0f172a 0%, #111827 35%, #1f2937 100%);
+      position: relative;
+      min-height: 170px;
+    }
+
+    .play-chip {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      transform: translate(-50%, -50%);
+      width: 58px;
+      height: 58px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.16);
+      backdrop-filter: blur(8px);
+      display: grid;
+      place-items: center;
+      color: white;
+    }
+
+    .fake-side {
+      border-left: 1px solid var(--border);
+      background: #fcfcfc;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .fake-row {
+      height: 14px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #ececec, #f7f7f7);
+    }
+
+    .fake-row.sm { width: 55%; }
+    .fake-row.md { width: 75%; }
+    .fake-row.lg { width: 100%; }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-stat {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.9);
+      border: 1px solid var(--border);
+    }
+
+    .hero-stat .label { font-size: 11px; color: var(--text-faint); margin-bottom: 6px; }
+    .hero-stat .value { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 28px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(10px);
+    }
+
+    .status-copy {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+
+    .status-indicator i {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--warning);
+      box-shadow: 0 0 0 4px rgba(183,121,31,.12);
+    }
+
+    .upload-panel {
+      margin-bottom: 28px;
+    }
+
+    .upload-area {
+      background: linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(250,250,250,.92) 100%);
+      border: 1px dashed #cfcfcf;
+      border-radius: 28px;
+      padding: clamp(38px, 7vw, 72px) 22px;
+      text-align: center;
+      transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition), background var(--transition);
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+    }
+
+    .upload-area:hover {
+      transform: translateY(-2px);
+      border-color: #111;
+      box-shadow: 0 24px 60px rgba(0,0,0,.08);
+      background: #fff;
+    }
+
+    .upload-area.dragover {
+      border-color: var(--accent);
+      background: #f8fbff;
+    }
+
+    .upload-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 18px;
+      border-radius: 22px;
+      background: #111;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      box-shadow: var(--shadow-md);
+    }
+
+    .upload-area h2 {
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+    }
+
+    .upload-area p {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 56ch;
+      margin: 0 auto;
+    }
+
+    .upload-tips {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .upload-tips span {
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text-faint);
+    }
+
+    .editor-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 20px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .panel-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .video-frame {
+      border-radius: 20px;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid rgba(0,0,0,.06);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
     }
 
     video {
       width: 100%;
-      max-height: 480px;
-      border-radius: var(--radius-lg);
+      max-height: 540px;
       background: #000;
-      display: block;
     }
 
-    .video-info {
+    .video-bar {
       display: flex;
       justify-content: space-between;
-      margin-top: var(--space-3);
-      padding: var(--space-2) var(--space-3);
-      background: var(--color-surface-2);
-      border-radius: var(--radius-md);
-      font-size: 0.875rem;
-      color: var(--color-text-muted);
+      gap: 12px;
+      padding: 14px 4px 0;
+      font-size: 13px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
     }
 
-    .video-meta-panel {
-      margin-top: var(--space-4);
-      padding: var(--space-4);
-      background: var(--color-surface-2);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--color-border);
+    .meta-panel {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 18px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
     }
 
-    .video-meta-title {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--color-text);
-      margin-bottom: var(--space-3);
+    .meta-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      color: var(--text-faint);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      margin-bottom: 12px;
     }
 
-    .video-meta-grid {
+    .meta-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: var(--space-3);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
     }
 
-    .video-meta-item {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: var(--space-3);
+    .meta-item {
+      padding: 13px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.86);
+      min-height: 72px;
     }
 
-    .video-meta-label {
-      font-size: 0.75rem;
-      color: var(--color-text-muted);
-      margin-bottom: 0.25rem;
+    .meta-label {
+      font-size: 12px;
+      color: var(--text-faint);
+      margin-bottom: 4px;
     }
 
-    .video-meta-value {
-      font-size: 0.9rem;
+    .meta-value {
+      font-size: 14px;
+      color: var(--text);
       font-weight: 600;
-      color: var(--color-text);
+      line-height: 1.35;
       word-break: break-word;
     }
 
-    .controls-section {
+    .sidebar-stack {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: var(--space-4);
-      margin-top: var(--space-6);
+      gap: 16px;
+      position: sticky;
+      top: 20px;
     }
 
-    .control-card {
-      background: var(--color-surface-2);
-      border-radius: var(--radius-lg);
-      padding: var(--space-4);
-    }
-    .control-card h3 {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--color-text);
-      margin-bottom: var(--space-3);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+    .control-section {
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.9);
+      box-shadow: var(--shadow-sm);
     }
 
-    label { font-size: 0.875rem; color: var(--color-text-muted); display: block; margin-bottom: var(--space-2); }
+    .control-section h3 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
 
-    input[type="number"], select {
+    .field + .field { margin-top: 12px; }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 7px;
+    }
+
+    .input, .select {
       width: 100%;
-      padding: var(--space-2) var(--space-3);
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-border);
-      background: var(--color-surface);
-      font-size: 0.875rem;
-      color: var(--color-text);
-      transition: border-color var(--transition);
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      padding: 0 14px;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
     }
-    input[type="number"]:focus, select:focus {
-      outline: 2px solid var(--color-primary);
-      outline-offset: 2px;
-      border-color: var(--color-primary);
+
+    .input:focus, .select:focus {
+      border-color: #111;
+      box-shadow: 0 0 0 4px rgba(17,17,17,.06);
+    }
+
+    .inline-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
 
     input[type="range"] {
       width: 100%;
-      accent-color: var(--color-primary);
-      margin-top: var(--space-2);
+      accent-color: #111;
     }
 
-    .trim-row { display: flex; gap: var(--space-3); }
-    .trim-row > div { flex: 1; }
+    .range-value {
+      font-size: 12px;
+      color: var(--text-faint);
+      margin-top: 6px;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
 
     .btn {
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 999px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: var(--space-2);
-      padding: var(--space-2) var(--space-4);
-      border: none;
-      border-radius: var(--radius-md);
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background var(--transition), opacity var(--transition);
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      transition: transform var(--transition), background var(--transition), color var(--transition), border-color var(--transition), opacity var(--transition), box-shadow var(--transition);
+      text-decoration: none;
+      white-space: nowrap;
     }
-    .btn-primary { background: var(--color-primary); color: #fff; }
-    .btn-primary:hover { background: var(--color-primary-hover); }
-    .btn-success { background: var(--color-success); color: #fff; }
-    .btn-success:hover { background: var(--color-success-hover); }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); opacity: .92; }
+
+    .btn-primary {
+      background: #111;
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(17,17,17,.18);
+    }
+
+    .btn-primary:hover { background: #000; }
+
     .btn-secondary {
-      background: var(--color-surface-2);
-      color: var(--color-text-muted);
-      border: 1px solid var(--color-border);
+      background: #fff;
+      color: #111;
+      border: 1px solid var(--border);
     }
-    .btn-secondary:hover { background: var(--color-border); }
-    .btn:active { opacity: 0.85; }
 
-    .control-card .btn { margin-top: var(--space-3); width: 100%; }
+    .btn-secondary:hover {
+      background: #fafafa;
+      border-color: #d3d3d3;
+    }
 
-    .effects-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+    .btn-success {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(0,112,243,.18);
+    }
+
+    .btn-success:hover { background: #005ad1; }
+
+    .btn-block { width: 100%; }
+
+    .effect-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
     .effect-btn {
-      padding: var(--space-2) var(--space-3);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-surface);
-      color: var(--color-text-muted);
-      font-size: 0.875rem;
-      cursor: pointer;
-      transition: background var(--transition), color var(--transition), border-color var(--transition);
+      min-height: 44px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      transition: all var(--transition);
     }
-    .effect-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
-    .effect-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
 
-    .export-bar {
-      display: flex;
-      gap: var(--space-3);
-      justify-content: center;
-      margin-top: var(--space-6);
-      flex-wrap: wrap;
+    .effect-btn:hover {
+      border-color: #111;
+      color: #111;
     }
-    .export-bar .btn-success { padding: var(--space-3) var(--space-8); font-size: 1rem; }
+
+    .effect-btn.active {
+      background: #111;
+      border-color: #111;
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(17,17,17,.12);
+    }
+
+    .export-actions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--text-faint);
+      margin-top: 10px;
+    }
+
+    .output-panel {
+      margin-top: 28px;
+      padding: 20px;
+    }
+
+    .output-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
 
     .modal {
       position: fixed;
       inset: 0;
-      background: oklch(0.2 0.01 80 / 0.5);
+      background: rgba(17,17,17,.42);
       display: flex;
       justify-content: center;
       align-items: center;
+      padding: 20px;
       z-index: 1000;
+      backdrop-filter: blur(10px);
     }
-    .modal-content {
-      background: var(--color-surface);
-      padding: var(--space-8) var(--space-10);
-      border-radius: var(--radius-xl);
-      text-align: center;
-      min-width: 320px;
+
+    .modal-card {
+      width: min(460px, 100%);
+      border-radius: 26px;
+      background: rgba(255,255,255,.94);
+      border: 1px solid rgba(0,0,0,.08);
+      padding: 28px;
       box-shadow: var(--shadow-lg);
     }
-    .modal-content h3 { font-size: 1rem; font-weight: 600; margin-bottom: var(--space-4); }
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background: var(--color-surface-2);
-      border-radius: 9999px;
-      overflow: hidden;
-      margin-bottom: var(--space-3);
-    }
-    .progress-bar-fill {
-      height: 100%;
-      background: var(--color-primary);
-      width: 0%;
-      transition: width 0.3s ease;
-      border-radius: 9999px;
-    }
-    #progressText { font-size: 0.875rem; color: var(--color-text-muted); }
 
-    .output-section h3 { font-size: 1rem; font-weight: 600; margin-bottom: var(--space-4); }
-    .output-section .export-bar { margin-top: var(--space-4); }
+    .modal-card h3 {
+      font-size: 22px;
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+    }
+
+    .modal-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #ececec;
+      border: 1px solid #e4e4e4;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #111 0%, #0070f3 100%);
+      transition: width .3s ease;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
 
     .notification {
       position: fixed;
-      top: var(--space-4);
-      right: var(--space-4);
-      padding: var(--space-3) var(--space-6);
-      border-radius: var(--radius-md);
-      color: #fff;
-      font-size: 0.875rem;
-      font-weight: 500;
+      right: 18px;
+      top: 18px;
       z-index: 2000;
+      max-width: min(420px, calc(100vw - 36px));
+      padding: 13px 16px;
+      border-radius: 16px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
       box-shadow: var(--shadow-md);
-      animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation: slideIn .25s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
-    .notification.success { background: var(--color-success); }
-    .notification.error { background: var(--color-error); }
 
-    @keyframes slideIn {
-      from { transform: translateX(calc(100% + 1rem)); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes slideOut {
-      from { transform: translateX(0); opacity: 1; }
-      to { transform: translateX(calc(100% + 1rem)); opacity: 0; }
-    }
+    .notification.success { background: #111; }
+    .notification.error { background: var(--error); }
 
     footer {
+      margin-top: 56px;
       text-align: center;
-      margin-top: var(--space-12);
-      padding: var(--space-6);
-      color: var(--color-text-muted);
-      font-size: 0.8rem;
+      font-size: 12px;
+      color: var(--text-faint);
     }
 
-    @media (max-width: 600px) {
-      .controls-section { grid-template-columns: 1fr; }
-      .modal-content { min-width: auto; margin: var(--space-4); }
+    @keyframes slideIn {
+      from { transform: translateY(-12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes slideOut {
+      from { transform: translateY(0); opacity: 1; }
+      to { transform: translateY(-8px); opacity: 0; }
+    }
+
+    @media (max-width: 960px) {
+      .hero,
+      .editor-layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar-stack { position: static; }
+    }
+
+    @media (max-width: 640px) {
+      .page-shell { padding-inline: 14px; }
+      .topbar { margin-bottom: 28px; }
+      .hero-copy,
+      .hero-card,
+      .panel,
+      .output-panel { border-radius: 20px; }
+      .hero-copy h1 { max-width: none; }
+      .hero-stats,
+      .meta-grid,
+      .inline-2,
+      .effect-grid { grid-template-columns: 1fr; }
+      .status-row,
+      .video-bar,
+      .output-actions,
+      .button-row { flex-direction: column; align-items: stretch; }
+      .mini-window-body { grid-template-columns: 1fr; }
+      .fake-side { border-left: 0; border-top: 1px solid var(--border); }
     }
   </style>
-
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 </head>
 <body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Teng Video Crop 首頁">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 7h10" />
+            <path d="M4 12h16" />
+            <path d="M4 17h10" />
+            <path d="M18 7l2 2-2 2" />
+          </svg>
+        </span>
+        <span class="brand-text">
+          <strong>Teng Video Crop</strong>
+          <span>Browser-based video editor</span>
+        </span>
+      </a>
+    </header>
 
-<div class="container">
-  <header>
-    <h1>Teng Video Crop</h1>
-    <p>Edit, trim, resize and export videos — entirely in your browser</p>
-  </header>
-
-  <div id="uploadSection">
-    <div class="upload-area" id="uploadArea">
-      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
-           fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="17 8 12 3 7 8"/>
-        <line x1="12" y1="3" x2="12" y2="15"/>
-      </svg>
-      <p>Drag &amp; drop a video here, or click to browse</p>
-      <input type="file" id="videoInput" accept="video/*" hidden>
-    </div>
-    <div class="upload-status">
-      <p id="ffmpegStatus">Initializing video processor… (first load may take 10–30 s)</p>
-    </div>
-  </div>
-
-  <div id="editorSection" class="editor-section" style="display:none;">
-    <video id="videoPlayer" controls></video>
-    <div class="video-info">
-      <span id="videoName"></span>
-      <span id="videoDuration"></span>
-    </div>
-
-    <div id="videoMetaPanel" class="video-meta-panel" style="display:none;">
-      <div class="video-meta-title">Video Details</div>
-      <div class="video-meta-grid">
-        <div class="video-meta-item">
-          <div class="video-meta-label">Format</div>
-          <div class="video-meta-value" id="metaFormat">—</div>
-        </div>
-        <div class="video-meta-item">
-          <div class="video-meta-label">File Size</div>
-          <div class="video-meta-value" id="metaSize">—</div>
-        </div>
-        <div class="video-meta-item">
-          <div class="video-meta-label">Duration</div>
-          <div class="video-meta-value" id="metaDurationFull">—</div>
-        </div>
-        <div class="video-meta-item">
-          <div class="video-meta-label">FPS</div>
-          <div class="video-meta-value" id="metaFps">—</div>
-        </div>
-        <div class="video-meta-item">
-          <div class="video-meta-label">Resolution</div>
-          <div class="video-meta-value" id="metaResolution">—</div>
-        </div>
-        <div class="video-meta-item">
-          <div class="video-meta-label">Filename</div>
-          <div class="video-meta-value" id="metaFilename">—</div>
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">單檔部署 · Vercel 友善</div>
+        <h1>直接在瀏覽器裡完成影片裁切與輸出。</h1>
+        <p>上傳影片後即可裁切時間、調整解析度、套用效果、控制音量並輸出成常見格式。所有處理都在你的瀏覽器端完成，不需安裝桌面軟體。</p>
+        <div class="hero-note">
+          <span>Trim</span>
+          <span>Resize</span>
+          <span>Effects</span>
+          <span>FFmpeg WASM</span>
         </div>
       </div>
-    </div>
 
-    <div class="controls-section">
-      <div class="control-card">
-        <h3>Trim</h3>
-        <div class="trim-row">
-          <div>
-            <label for="startTime">Start (s)</label>
-            <input type="number" id="startTime" min="0" step="0.1" value="0">
+      <div class="hero-card" aria-hidden="true">
+        <div class="mini-window">
+          <div class="mini-window-top">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
           </div>
-          <div>
-            <label for="endTime">End (s)</label>
-            <input type="number" id="endTime" min="0" step="0.1">
+          <div class="mini-window-body">
+            <div class="fake-video">
+              <div class="play-chip">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+              </div>
+            </div>
+            <div class="fake-side">
+              <div class="fake-row lg"></div>
+              <div class="fake-row md"></div>
+              <div class="fake-row sm"></div>
+              <div class="fake-row lg" style="margin-top:6px;"></div>
+              <div class="fake-row md"></div>
+              <div class="fake-row sm"></div>
+            </div>
           </div>
         </div>
-        <button id="trimBtn" class="btn btn-primary">Apply Trim</button>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="label">部署方式</div><div class="value">單一 HTML</div></div>
+          <div class="hero-stat"><div class="label">輸出格式</div><div class="value">MP4 / WebM / GIF</div></div>
+          <div class="hero-stat"><div class="label">運算位置</div><div class="value">Browser</div></div>
+        </div>
       </div>
+    </section>
 
-      <div class="control-card">
-        <h3>Resize</h3>
-        <label for="resizeSelect">Resolution</label>
-        <select id="resizeSelect">
-          <option value="">Original</option>
-          <option value="1920x1080">1080p</option>
-          <option value="1280x720">720p</option>
-          <option value="854x480">480p</option>
-          <option value="640x360">360p</option>
-        </select>
-        <button id="resizeBtn" class="btn btn-primary">Apply Resize</button>
+    <div class="status-row">
+      <div class="status-copy" id="ffmpegStatusText">正在初始化影片處理核心，首次載入可能需要 10–30 秒。</div>
+      <div class="status-indicator"><i id="statusDot"></i><span id="statusLabel">準備中</span></div>
+    </div>
+
+    <section id="uploadSection" class="upload-panel">
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <h2>拖曳影片進來，或點一下直接選檔。</h2>
+        <p>支援常見影片格式。若部署在 Vercel，請保留 COOP / COEP header 設定，FFmpeg WASM 才能正常執行。</p>
+        <div class="upload-tips">
+          <span>本地瀏覽器運算</span>
+          <span>不需安裝軟體</span>
+          <span>可直接覆蓋部署</span>
+        </div>
+        <input type="file" id="videoInput" accept="video/*" hidden />
       </div>
+    </section>
 
-      <div class="control-card">
-        <h3>Format</h3>
-        <label for="formatSelect">Output format</label>
-        <select id="formatSelect">
-          <option value="mp4" selected>MP4</option>
-          <option value="webm">WebM</option>
-          <option value="mov">MOV</option>
-          <option value="avi">AVI</option>
-          <option value="gif">GIF</option>
-        </select>
-        <button id="convertBtn" class="btn btn-primary">Set Format</button>
+    <section id="editorSection" style="display:none;">
+      <div class="editor-layout">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">預覽與原始資訊</div>
+              <div class="panel-subtitle">上傳後會自動讀取影片基本資料</div>
+            </div>
+          </div>
+
+          <div class="video-frame">
+            <video id="videoPlayer" controls></video>
+          </div>
+
+          <div class="video-bar">
+            <span id="videoName">—</span>
+            <span id="videoDuration">—</span>
+          </div>
+
+          <div id="videoMetaPanel" class="meta-panel" style="display:none;">
+            <div class="meta-title">Video Details</div>
+            <div class="meta-grid">
+              <div class="meta-item"><div class="meta-label">格式</div><div class="meta-value" id="metaFormat">—</div></div>
+              <div class="meta-item"><div class="meta-label">檔案大小</div><div class="meta-value" id="metaSize">—</div></div>
+              <div class="meta-item"><div class="meta-label">影片長度</div><div class="meta-value" id="metaDurationFull">—</div></div>
+              <div class="meta-item"><div class="meta-label">FPS</div><div class="meta-value" id="metaFps">—</div></div>
+              <div class="meta-item"><div class="meta-label">解析度</div><div class="meta-value" id="metaResolution">—</div></div>
+              <div class="meta-item"><div class="meta-label">檔名</div><div class="meta-value" id="metaFilename">—</div></div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="sidebar-stack">
+          <div class="control-section">
+            <h3>時間裁切</h3>
+            <div class="inline-2">
+              <div class="field">
+                <label for="startTime">起始秒數</label>
+                <input class="input" type="number" id="startTime" min="0" step="0.1" value="0" />
+              </div>
+              <div class="field">
+                <label for="endTime">結束秒數</label>
+                <input class="input" type="number" id="endTime" min="0" step="0.1" />
+              </div>
+            </div>
+            <div class="button-row">
+              <button id="trimBtn" class="btn btn-secondary btn-block">套用裁切設定</button>
+            </div>
+          </div>
+
+          <div class="control-section">
+            <h3>輸出解析度</h3>
+            <div class="field">
+              <label for="resizeSelect">選擇尺寸</label>
+              <select class="select" id="resizeSelect">
+                <option value="">保留原始解析度</option>
+                <option value="1920x1080">1080p</option>
+                <option value="1280x720">720p</option>
+                <option value="854x480">480p</option>
+                <option value="640x360">360p</option>
+              </select>
+            </div>
+            <div class="button-row">
+              <button id="resizeBtn" class="btn btn-secondary btn-block">套用尺寸設定</button>
+            </div>
+          </div>
+
+          <div class="control-section">
+            <h3>輸出格式</h3>
+            <div class="field">
+              <label for="formatSelect">輸出檔案格式</label>
+              <select class="select" id="formatSelect">
+                <option value="mp4" selected>MP4</option>
+                <option value="webm">WebM</option>
+                <option value="mov">MOV</option>
+                <option value="avi">AVI</option>
+                <option value="gif">GIF</option>
+              </select>
+            </div>
+            <div class="button-row">
+              <button id="convertBtn" class="btn btn-secondary btn-block">套用格式設定</button>
+            </div>
+          </div>
+
+          <div class="control-section">
+            <h3>聲音控制</h3>
+            <div class="field">
+              <label for="volumeSlider">音量調整</label>
+              <input type="range" id="volumeSlider" min="0" max="200" value="100" />
+              <div class="range-value" id="volumeValue">100%</div>
+            </div>
+            <div class="button-row">
+              <button id="muteBtn" class="btn btn-secondary btn-block">移除音訊</button>
+            </div>
+          </div>
+
+          <div class="control-section">
+            <h3>影像效果</h3>
+            <div class="effect-grid">
+              <button class="effect-btn" data-effect="grayscale">黑白</button>
+              <button class="effect-btn" data-effect="blur">模糊</button>
+              <button class="effect-btn" data-effect="sharpen">銳化</button>
+              <button class="effect-btn" data-effect="vintage">復古</button>
+            </div>
+          </div>
+
+          <div class="control-section">
+            <h3>輸出</h3>
+            <div class="export-actions">
+              <button id="exportBtn" class="btn btn-success btn-block">開始輸出影片</button>
+              <button id="resetBtn" class="btn btn-primary btn-block">重設全部設定</button>
+            </div>
+            <div class="hint">若影片較大，處理時間會依裝置效能而不同。</div>
+          </div>
+        </aside>
       </div>
+    </section>
 
-      <div class="control-card">
-        <h3>Audio</h3>
-        <label for="volumeSlider">Volume: <span id="volumeValue">100%</span></label>
-        <input type="range" id="volumeSlider" min="0" max="200" value="100">
-        <button id="muteBtn" class="btn btn-secondary">Remove Audio</button>
+    <section id="outputSection" class="output-panel" style="display:none;">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">輸出完成</div>
+          <div class="panel-subtitle">可直接下載，或重新上傳另一支影片</div>
+        </div>
       </div>
+      <div class="video-frame">
+        <video id="outputVideo" controls></video>
+      </div>
+      <div class="output-actions">
+        <button id="downloadBtn" class="btn btn-success">下載影片</button>
+        <button id="newVideoBtn" class="btn btn-secondary">處理另一支影片</button>
+      </div>
+    </section>
 
-      <div class="control-card">
-        <h3>Effects</h3>
-        <div class="effects-grid">
-          <button class="effect-btn" data-effect="grayscale">Grayscale</button>
-          <button class="effect-btn" data-effect="blur">Blur</button>
-          <button class="effect-btn" data-effect="sharpen">Sharpen</button>
-          <button class="effect-btn" data-effect="vintage">Vintage</button>
+    <div id="processingModal" class="modal" style="display:none;">
+      <div class="modal-card">
+        <h3>正在處理影片</h3>
+        <p>FFmpeg 正在瀏覽器端執行，請稍候。</p>
+        <div class="progress-track"><div id="progressBarFill" class="progress-fill"></div></div>
+        <div class="progress-meta">
+          <span id="progressText">初始化中…</span>
+          <span id="progressPercent">0%</span>
         </div>
       </div>
     </div>
 
-    <div class="export-bar">
-      <button id="exportBtn" class="btn btn-success">Export Video</button>
-      <button id="resetBtn" class="btn btn-secondary">Reset All</button>
-    </div>
+    <footer>FFmpeg WASM · Browser-only processing · 可直接作為 Vercel 覆蓋版使用</footer>
   </div>
 
-  <div id="processingModal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <h3>Processing Video…</h3>
-      <div class="progress-bar"><div id="progressBarFill" class="progress-bar-fill"></div></div>
-      <p id="progressText">Initializing…</p>
-    </div>
-  </div>
+  <script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
 
-  <div id="outputSection" class="output-section" style="display:none;">
-    <h3>Processed Video</h3>
-    <video id="outputVideo" controls></video>
-    <div class="export-bar">
-      <button id="downloadBtn" class="btn btn-success">Download</button>
-      <button id="newVideoBtn" class="btn btn-primary">Edit Another</button>
-    </div>
-  </div>
+    let ffmpeg = null;
+    let ffmpegLoaded = false;
+    let currentVideoFile = null;
+    let currentVideoURL = null;
+    let processedVideoURL = null;
+    let detectedFPS = null;
 
-  <footer>Powered by FFmpeg WASM · All processing happens in your browser</footer>
-</div>
+    let videoOperations = {
+      trim: null,
+      effect: null,
+      resize: null,
+      format: 'mp4',
+      mute: false,
+      volume: 100
+    };
 
-<script>
-const { createFFmpeg, fetchFile } = FFmpeg;
-let ffmpeg = null;
-let ffmpegLoaded = false;
-let currentVideoFile = null;
-let currentVideoURL = null;
-let processedVideoURL = null;
-let videoOperations = {
-  trim: null,
-  effect: null,
-  resize: null,
-  format: 'mp4',
-  mute: false,
-  volume: 100
-};
-let detectedFPS = null;
+    const uploadArea = document.getElementById('uploadArea');
+    const videoInput = document.getElementById('videoInput');
+    const uploadSection = document.getElementById('uploadSection');
+    const editorSection = document.getElementById('editorSection');
+    const outputSection = document.getElementById('outputSection');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const outputVideo = document.getElementById('outputVideo');
+    const videoName = document.getElementById('videoName');
+    const videoDuration = document.getElementById('videoDuration');
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumeValue = document.getElementById('volumeValue');
+    const processingModal = document.getElementById('processingModal');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const progressText = document.getElementById('progressText');
+    const progressPercent = document.getElementById('progressPercent');
+    const ffmpegStatusText = document.getElementById('ffmpegStatusText');
+    const statusLabel = document.getElementById('statusLabel');
+    const statusDot = document.getElementById('statusDot');
 
-function formatBytes(bytes) {
-  if (!bytes && bytes !== 0) return '—';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  let i = 0;
-  let num = bytes;
-  while (num >= 1024 && i < units.length - 1) {
-    num /= 1024;
-    i++;
-  }
-  return `${num.toFixed(num >= 100 || i === 0 ? 0 : num >= 10 ? 1 : 2)} ${units[i]}`;
-}
-
-function formatDurationFull(seconds) {
-  if (!isFinite(seconds)) return '—';
-  const s = Math.floor(seconds % 60).toString().padStart(2, '0');
-  const m = Math.floor((seconds / 60) % 60).toString().padStart(2, '0');
-  const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-  return h === '00' ? `${m}:${s}` : `${h}:${m}:${s}`;
-}
-
-function getExtension(filename) {
-  const parts = filename.split('.');
-  return parts.length > 1 ? parts.pop().toLowerCase() : '—';
-}
-
-function updateMetaField(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = value ?? '—';
-}
-
-function resetVideoMetaPanel() {
-  updateMetaField('metaFormat', '—');
-  updateMetaField('metaSize', '—');
-  updateMetaField('metaDurationFull', '—');
-  updateMetaField('metaFps', '—');
-  updateMetaField('metaResolution', '—');
-  updateMetaField('metaFilename', '—');
-}
-
-function showVideoMetaPanel() {
-  const panel = document.getElementById('videoMetaPanel');
-  if (panel) panel.style.display = 'block';
-}
-
-function parseFPSFromLog(message) {
-  if (!message) return null;
-  const patterns = [
-    /,\s*([\d.]+)\s*fps\b/i,
-    /Stream.*?([\d.]+)\s*fps\b/i,
-    /([\d.]+)\s*tbr\b/i
-  ];
-  for (const regex of patterns) {
-    const match = message.match(regex);
-    if (match && match[1]) {
-      const fps = parseFloat(match[1]);
-      if (fps > 0 && fps < 1000) return fps;
+    function setStatus(text, label, type = 'loading') {
+      ffmpegStatusText.textContent = text;
+      statusLabel.textContent = label;
+      if (type === 'ready') {
+        statusDot.style.background = 'var(--success)';
+        statusDot.style.boxShadow = '0 0 0 4px rgba(15,143,79,.12)';
+      } else if (type === 'error') {
+        statusDot.style.background = 'var(--error)';
+        statusDot.style.boxShadow = '0 0 0 4px rgba(209,47,106,.12)';
+      } else {
+        statusDot.style.background = 'var(--warning)';
+        statusDot.style.boxShadow = '0 0 0 4px rgba(183,121,31,.12)';
+      }
     }
-  }
-  return null;
-}
 
-function updateFPSDisplay(fps) {
-  detectedFPS = fps;
-  updateMetaField('metaFps', fps ? `${fps} fps` : '—');
-}
+    function formatBytes(bytes) {
+      if (!bytes && bytes !== 0) return '—';
+      const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+      let i = 0;
+      let value = bytes;
+      while (value >= 1024 && i < units.length - 1) {
+        value /= 1024;
+        i += 1;
+      }
+      return `${value.toFixed(value >= 100 || i === 0 ? 0 : value >= 10 ? 1 : 2)} ${units[i]}`;
+    }
 
-async function initFFmpeg() {
-  if (!ffmpeg) {
-    const baseUrl = window.location.origin;
-    const coreUrl = `${baseUrl}/ffmpeg/ffmpeg-core.js`;
+    function formatTime(seconds) {
+      if (!isFinite(seconds)) return '—';
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
 
-    ffmpeg = createFFmpeg({
-      log: true,
-      corePath: coreUrl,
-      logger: ({ type, message }) => {
-        console.log(`[${type}] ${message}`);
-        const fps = parseFPSFromLog(message);
-        if (fps && !detectedFPS) {
-          updateFPSDisplay(fps);
+    function formatDurationFull(seconds) {
+      if (!isFinite(seconds)) return '—';
+      const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+      const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+      const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+      return h === '00' ? `${m}:${s}` : `${h}:${m}:${s}`;
+    }
+
+    function getExtension(filename) {
+      const parts = filename.split('.');
+      return parts.length > 1 ? parts.pop().toLowerCase() : '—';
+    }
+
+    function updateMetaField(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value ?? '—';
+    }
+
+    function resetVideoMetaPanel() {
+      updateMetaField('metaFormat', '—');
+      updateMetaField('metaSize', '—');
+      updateMetaField('metaDurationFull', '—');
+      updateMetaField('metaFps', '—');
+      updateMetaField('metaResolution', '—');
+      updateMetaField('metaFilename', '—');
+    }
+
+    function showVideoMetaPanel() {
+      document.getElementById('videoMetaPanel').style.display = 'block';
+    }
+
+    function parseFPSFromLog(message) {
+      if (!message) return null;
+      const patterns = [
+        /,\s*([\d.]+)\s*fps\b/i,
+        /Stream.*?([\d.]+)\s*fps\b/i,
+        /([\d.]+)\s*tbr\b/i
+      ];
+      for (const regex of patterns) {
+        const match = message.match(regex);
+        if (match && match[1]) {
+          const fps = parseFloat(match[1]);
+          if (fps > 0 && fps < 1000) return fps;
         }
       }
-    });
-    if (!ffmpeg.isLoaded()) {
-      await ffmpeg.load();
-      ffmpegLoaded = true;
-      console.log('FFmpeg loaded successfully');
+      return null;
     }
-  }
-  return ffmpeg;
-}
 
-async function autoLoadFFmpeg() {
-  const status = document.getElementById('ffmpegStatus');
-  try {
-    status.textContent = 'Loading video processor… This may take a moment on first visit.';
-    status.style.color = '#01696f';
-    await initFFmpeg();
-    status.textContent = 'Video processor ready! Upload a video to begin.';
-    status.style.color = '#437a22';
-    uploadArea.style.opacity = '1';
-    uploadArea.style.pointerEvents = 'auto';
-  } catch (error) {
-    console.error('Failed to auto-load FFmpeg:', error);
-    status.textContent = 'Failed to load video processor. Please refresh and try again.';
-    status.style.color = '#a12c7b';
-    const retryBtn = document.createElement('button');
-    retryBtn.textContent = 'Retry';
-    retryBtn.className = 'btn btn-primary';
-    retryBtn.style.marginTop = '12px';
-    retryBtn.onclick = () => { retryBtn.remove(); autoLoadFFmpeg(); };
-    status.parentElement.appendChild(retryBtn);
-  }
-}
-
-const uploadArea = document.getElementById('uploadArea');
-const videoInput = document.getElementById('videoInput');
-const editorSection = document.getElementById('editorSection');
-const videoPlayer = document.getElementById('videoPlayer');
-const videoName = document.getElementById('videoName');
-const videoDuration = document.getElementById('videoDuration');
-const startTimeInput = document.getElementById('startTime');
-const endTimeInput = document.getElementById('endTime');
-const processingModal = document.getElementById('processingModal');
-const progressBarFill = document.getElementById('progressBarFill');
-const progressText = document.getElementById('progressText');
-const outputSection = document.getElementById('outputSection');
-const outputVideo = document.getElementById('outputVideo');
-const volumeSlider = document.getElementById('volumeSlider');
-const volumeValue = document.getElementById('volumeValue');
-
-uploadArea.addEventListener('click', () => {
-  if (ffmpegLoaded) videoInput.click();
-  else showNotification('Please wait for the video processor to load', 'error');
-});
-uploadArea.addEventListener('dragover', e => {
-  e.preventDefault();
-  uploadArea.classList.add('dragover');
-});
-uploadArea.addEventListener('dragleave', e => {
-  e.preventDefault();
-  uploadArea.classList.remove('dragover');
-});
-uploadArea.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadArea.classList.remove('dragover');
-  if (!ffmpegLoaded) {
-    showNotification('Please wait for the video processor to load', 'error');
-    return;
-  }
-  const files = e.dataTransfer.files;
-  if (files.length > 0 && files[0].type.startsWith('video/')) {
-    handleVideoFile(files[0]);
-  } else {
-    showNotification('Please drop a video file', 'error');
-  }
-});
-videoInput.addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (file && file.type.startsWith('video/')) {
-    handleVideoFile(file);
-  } else {
-    showNotification('Please select a video file', 'error');
-  }
-});
-
-document.getElementById('trimBtn').addEventListener('click', handleTrim);
-document.getElementById('resizeBtn').addEventListener('click', handleResize);
-document.getElementById('convertBtn').addEventListener('click', handleConvert);
-document.getElementById('muteBtn').addEventListener('click', handleMute);
-document.getElementById('exportBtn').addEventListener('click', handleExport);
-document.getElementById('resetBtn').addEventListener('click', handleReset);
-document.getElementById('downloadBtn').addEventListener('click', handleDownload);
-document.getElementById('newVideoBtn').addEventListener('click', handleNewVideo);
-
-volumeSlider.addEventListener('input', e => {
-  videoOperations.volume = e.target.value;
-  volumeValue.textContent = `${e.target.value}%`;
-});
-
-document.querySelectorAll('.effect-btn').forEach(btn => {
-  btn.addEventListener('click', e => {
-    document.querySelectorAll('.effect-btn').forEach(b => b.classList.remove('active'));
-    if (videoOperations.effect === e.target.dataset.effect) {
-      videoOperations.effect = null;
-    } else {
-      e.target.classList.add('active');
-      videoOperations.effect = e.target.dataset.effect;
+    function updateFPSDisplay(fps) {
+      detectedFPS = fps;
+      updateMetaField('metaFps', fps ? `${fps} fps` : '—');
     }
-  });
-});
 
-async function handleVideoFile(file) {
-  currentVideoFile = file;
-  currentVideoURL = URL.createObjectURL(file);
-  detectedFPS = null;
-
-  resetVideoMetaPanel();
-  showVideoMetaPanel();
-
-  videoPlayer.src = currentVideoURL;
-  videoName.textContent = file.name;
-
-  const ext = getExtension(file.name).toUpperCase();
-  const mime = file.type || 'unknown';
-  updateMetaField('metaFilename', file.name);
-  updateMetaField('metaFormat', ext !== '—' ? `${ext} (${mime})` : mime);
-  updateMetaField('metaSize', formatBytes(file.size));
-  updateMetaField('metaFps', '—');
-
-  document.getElementById('uploadSection').style.display = 'none';
-  editorSection.style.display = 'block';
-
-  videoPlayer.addEventListener('loadedmetadata', async () => {
-    const duration = videoPlayer.duration;
-    const width = videoPlayer.videoWidth;
-    const height = videoPlayer.videoHeight;
-
-    videoDuration.textContent = formatTime(duration);
-    endTimeInput.value = Math.floor(duration);
-    endTimeInput.max = duration;
-    startTimeInput.max = duration;
-
-    updateMetaField('metaDurationFull', formatDurationFull(duration));
-    updateMetaField('metaResolution', width && height ? `${width} × ${height}` : '—');
-
-    try {
-      await initFFmpeg();
-      const inputExt = file.name.split('.').pop().toLowerCase();
-      const probeName = `probe.${inputExt}`;
-      ffmpeg.FS('writeFile', probeName, await fetchFile(file));
-      try {
-        await ffmpeg.run('-i', probeName);
-      } catch (e) {
+    async function initFFmpeg() {
+      if (!ffmpeg) {
+        const baseUrl = window.location.origin;
+        const coreUrl = `${baseUrl}/ffmpeg/ffmpeg-core.js`;
+        ffmpeg = createFFmpeg({
+          log: true,
+          corePath: coreUrl,
+          logger: ({ message }) => {
+            const fps = parseFPSFromLog(message);
+            if (fps && !detectedFPS) updateFPSDisplay(fps);
+          }
+        });
       }
+      if (!ffmpeg.isLoaded()) {
+        await ffmpeg.load();
+        ffmpegLoaded = true;
+      }
+      return ffmpeg;
+    }
+
+    async function autoLoadFFmpeg() {
       try {
-        ffmpeg.FS('unlink', probeName);
-      } catch (e) {}
-      if (!detectedFPS) updateFPSDisplay(null);
-    } catch (err) {
-      console.warn('FPS detection failed:', err);
-      updateFPSDisplay(null);
+        setStatus('正在初始化影片處理核心，首次載入可能需要 10–30 秒。', '準備中', 'loading');
+        uploadArea.style.opacity = '0.55';
+        uploadArea.style.pointerEvents = 'none';
+        await initFFmpeg();
+        setStatus('影片處理核心已就緒，可以開始上傳影片。', '已就緒', 'ready');
+        uploadArea.style.opacity = '1';
+        uploadArea.style.pointerEvents = 'auto';
+      } catch (error) {
+        console.error(error);
+        setStatus('影片處理核心載入失敗，請重新整理頁面後再試一次。', '載入失敗', 'error');
+        showNotification('FFmpeg 載入失敗，請重新整理頁面。', 'error');
+      }
     }
-  }, { once: true });
-}
 
-function handleTrim() {
-  const startTime = parseFloat(startTimeInput.value);
-  const endTime = parseFloat(endTimeInput.value);
-  if (startTime >= 0 && endTime > startTime) {
-    videoOperations.trim = { start: startTime, end: endTime };
-    showNotification('Trim settings applied');
-  } else {
-    showNotification('Invalid trim times', 'error');
-  }
-}
-
-function handleResize() {
-  const resizeValue = document.getElementById('resizeSelect').value;
-  if (resizeValue) {
-    videoOperations.resize = resizeValue;
-    showNotification('Resize settings applied');
-  }
-}
-
-function handleConvert() {
-  const format = document.getElementById('formatSelect').value;
-  videoOperations.format = format;
-  showNotification(`Format set to ${format.toUpperCase()}`);
-}
-
-function handleMute() {
-  videoOperations.mute = !videoOperations.mute;
-  document.getElementById('muteBtn').textContent =
-    videoOperations.mute ? 'Add Audio' : 'Remove Audio';
-  showNotification(videoOperations.mute ? 'Audio will be removed' : 'Audio will be kept');
-}
-
-async function handleExport() {
-  showProcessingModal();
-  try {
-    updateProgress(5, 'Initializing FFmpeg…');
-    await initFFmpeg();
-    ffmpeg.setProgress(({ ratio }) => {
-      const pct = Math.round(ratio * 100);
-      updateProgress(pct, `Processing: ${pct}%`);
+    uploadArea.addEventListener('click', () => {
+      if (!ffmpegLoaded) {
+        showNotification('請先等待核心初始化完成。', 'error');
+        return;
+      }
+      videoInput.click();
     });
-    updateProgress(10, 'Loading video file…');
-    const inputExt = currentVideoFile.name.split('.').pop().toLowerCase();
-    const inputFileName = `input.${inputExt}`;
-    ffmpeg.FS('writeFile', inputFileName, await fetchFile(currentVideoFile));
-    updateProgress(20, 'Preparing FFmpeg command…');
-    const outputFileName = `output.${videoOperations.format}`;
-    const args = buildFFmpegArgs(inputFileName, outputFileName);
-    console.log('FFmpeg args:', '-i', inputFileName, ...args);
-    updateProgress(30, 'Processing video…');
-    await ffmpeg.run('-i', inputFileName, ...args);
-    updateProgress(90, 'Finalizing…');
-    const data = ffmpeg.FS('readFile', outputFileName);
-    const blob = new Blob([data.buffer], { type: `video/${videoOperations.format}` });
-    processedVideoURL = URL.createObjectURL(blob);
-    try {
-      ffmpeg.FS('unlink', inputFileName);
-      ffmpeg.FS('unlink', outputFileName);
-    } catch (e) {
-      console.warn(e);
+
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      if (!ffmpegLoaded) {
+        showNotification('請先等待核心初始化完成。', 'error');
+        return;
+      }
+      const file = e.dataTransfer.files?.[0];
+      if (file && file.type.startsWith('video/')) {
+        handleVideoFile(file);
+      } else {
+        showNotification('請拖曳正確的影片檔。', 'error');
+      }
+    });
+
+    videoInput.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file && file.type.startsWith('video/')) {
+        handleVideoFile(file);
+      } else {
+        showNotification('請選擇正確的影片檔。', 'error');
+      }
+    });
+
+    document.getElementById('trimBtn').addEventListener('click', handleTrim);
+    document.getElementById('resizeBtn').addEventListener('click', handleResize);
+    document.getElementById('convertBtn').addEventListener('click', handleConvert);
+    document.getElementById('muteBtn').addEventListener('click', handleMute);
+    document.getElementById('exportBtn').addEventListener('click', handleExport);
+    document.getElementById('resetBtn').addEventListener('click', handleReset);
+    document.getElementById('downloadBtn').addEventListener('click', handleDownload);
+    document.getElementById('newVideoBtn').addEventListener('click', handleNewVideo);
+
+    volumeSlider.addEventListener('input', (e) => {
+      videoOperations.volume = Number(e.target.value);
+      volumeValue.textContent = `${e.target.value}%`;
+    });
+
+    document.querySelectorAll('.effect-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const effect = e.currentTarget.dataset.effect;
+        if (videoOperations.effect === effect) {
+          videoOperations.effect = null;
+          e.currentTarget.classList.remove('active');
+        } else {
+          document.querySelectorAll('.effect-btn').forEach((b) => b.classList.remove('active'));
+          videoOperations.effect = effect;
+          e.currentTarget.classList.add('active');
+        }
+      });
+    });
+
+    async function handleVideoFile(file) {
+      currentVideoFile = file;
+      detectedFPS = null;
+      resetVideoMetaPanel();
+      showVideoMetaPanel();
+
+      if (currentVideoURL) URL.revokeObjectURL(currentVideoURL);
+      currentVideoURL = URL.createObjectURL(file);
+      videoPlayer.src = currentVideoURL;
+      videoName.textContent = file.name;
+      videoDuration.textContent = '讀取中…';
+
+      const ext = getExtension(file.name).toUpperCase();
+      const mime = file.type || 'unknown';
+      updateMetaField('metaFilename', file.name);
+      updateMetaField('metaFormat', ext !== '—' ? `${ext} (${mime})` : mime);
+      updateMetaField('metaSize', formatBytes(file.size));
+      updateMetaField('metaFps', '—');
+
+      uploadSection.style.display = 'none';
+      outputSection.style.display = 'none';
+      editorSection.style.display = 'block';
+
+      videoPlayer.addEventListener('loadedmetadata', async () => {
+        const duration = videoPlayer.duration;
+        const width = videoPlayer.videoWidth;
+        const height = videoPlayer.videoHeight;
+        videoDuration.textContent = formatTime(duration);
+        startTimeInput.max = duration;
+        endTimeInput.max = duration;
+        endTimeInput.value = Math.floor(duration);
+        updateMetaField('metaDurationFull', formatDurationFull(duration));
+        updateMetaField('metaResolution', width && height ? `${width} × ${height}` : '—');
+
+        try {
+          await initFFmpeg();
+          const inputExt = file.name.split('.').pop().toLowerCase();
+          const probeName = `probe.${inputExt}`;
+          ffmpeg.FS('writeFile', probeName, await fetchFile(file));
+          try {
+            await ffmpeg.run('-i', probeName);
+          } catch (e) {}
+          try {
+            ffmpeg.FS('unlink', probeName);
+          } catch (e) {}
+          if (!detectedFPS) updateFPSDisplay(null);
+        } catch (error) {
+          console.warn('FPS detection failed', error);
+          updateFPSDisplay(null);
+        }
+      }, { once: true });
     }
-    updateProgress(100, 'Complete!');
-    setTimeout(() => {
-      hideProcessingModal();
-      showOutput();
-    }, 500);
-  } catch (error) {
-    console.error('Export error:', error);
-    hideProcessingModal();
-    let msg = 'Error processing video: ';
-    if (error.message && error.message.includes('SharedArrayBuffer')) {
-      msg += 'Browser requires COOP/COEP headers. Ensure Vercel vercel.json is set correctly.';
-    } else if (error.message && error.message.includes('memory')) {
-      msg += 'Out of memory. Try a smaller video.';
-    } else {
-      msg += error.message || 'Unknown error';
+
+    function handleTrim() {
+      const start = parseFloat(startTimeInput.value);
+      const end = parseFloat(endTimeInput.value);
+      if (start >= 0 && end > start) {
+        videoOperations.trim = { start, end };
+        showNotification('已套用裁切設定。');
+      } else {
+        showNotification('裁切時間設定不正確。', 'error');
+      }
     }
-    showNotification(msg, 'error');
-  }
-}
 
-function buildFFmpegArgs(inputFile, outputFile) {
-  const args = [];
-  if (videoOperations.trim) {
-    args.push('-ss', videoOperations.trim.start.toString());
-    args.push('-t', (videoOperations.trim.end - videoOperations.trim.start).toString());
-  }
-  const filters = [];
-  if (videoOperations.effect) {
-    switch (videoOperations.effect) {
-      case 'grayscale': filters.push('hue=s=0'); break;
-      case 'blur': filters.push('boxblur=5:1'); break;
-      case 'sharpen': filters.push('unsharp=5:5:1.0:5:5:0.0'); break;
-      case 'vintage': filters.push('curves=vintage'); break;
+    function handleResize() {
+      const value = document.getElementById('resizeSelect').value;
+      videoOperations.resize = value || null;
+      showNotification(value ? '已套用解析度設定。' : '已恢復原始解析度。');
     }
-  }
-  if (videoOperations.resize) {
-    const [w, h] = videoOperations.resize.split('x');
-    filters.push(`scale=${w}:${h}`);
-  }
-  if (filters.length > 0) args.push('-vf', filters.join(','));
-  if (videoOperations.mute) {
-    args.push('-an');
-  } else if (videoOperations.volume != 100) {
-    args.push('-af', `volume=${videoOperations.volume / 100}`);
-  }
-  if (videoOperations.format === 'gif') {
-    args.push('-pix_fmt', 'rgb24', '-r', '10');
-  } else if (videoOperations.format === 'webm') {
-    args.push('-c:v', 'libvpx', '-crf', '10', '-b:v', '1M');
-    if (!videoOperations.mute) args.push('-c:a', 'libvorbis');
-  } else {
-    args.push('-c:v', 'libx264', '-preset', 'medium', '-crf', '23', '-pix_fmt', 'yuv420p');
-    if (!videoOperations.mute) args.push('-c:a', 'aac', '-b:a', '128k');
-  }
-  if (videoOperations.format === 'mov') args.push('-f', 'mov');
-  else if (videoOperations.format === 'avi') args.push('-f', 'avi');
-  args.push(outputFile);
-  return args;
-}
 
-function handleReset() {
-  videoOperations = {
-    trim: null,
-    effect: null,
-    resize: null,
-    format: 'mp4',
-    mute: false,
-    volume: 100
-  };
-  startTimeInput.value = 0;
-  if (videoPlayer.duration) endTimeInput.value = Math.floor(videoPlayer.duration);
-  document.getElementById('resizeSelect').value = '';
-  document.getElementById('formatSelect').value = 'mp4';
-  document.querySelectorAll('.effect-btn').forEach(b => b.classList.remove('active'));
-  volumeSlider.value = 100;
-  volumeValue.textContent = '100%';
-  document.getElementById('muteBtn').textContent = 'Remove Audio';
-  showNotification('All settings reset');
-}
+    function handleConvert() {
+      const format = document.getElementById('formatSelect').value;
+      videoOperations.format = format;
+      showNotification(`輸出格式已設定為 ${format.toUpperCase()}。`);
+    }
 
-function handleDownload() {
-  if (processedVideoURL) {
-    const a = document.createElement('a');
-    a.href = processedVideoURL;
-    a.download = `edited_video_${Date.now()}.${videoOperations.format}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-}
+    function handleMute() {
+      videoOperations.mute = !videoOperations.mute;
+      document.getElementById('muteBtn').textContent = videoOperations.mute ? '保留音訊' : '移除音訊';
+      showNotification(videoOperations.mute ? '輸出時將移除音訊。' : '輸出時將保留音訊。');
+    }
 
-function handleNewVideo() {
-  handleReset();
-  currentVideoFile = null;
-  if (currentVideoURL) URL.revokeObjectURL(currentVideoURL);
-  if (processedVideoURL) URL.revokeObjectURL(processedVideoURL);
-  document.getElementById('uploadSection').style.display = 'block';
-  editorSection.style.display = 'none';
-  outputSection.style.display = 'none';
-  videoInput.value = '';
-  resetVideoMetaPanel();
-  document.getElementById('videoMetaPanel').style.display = 'none';
-}
+    function buildFFmpegArgs(inputFileName, outputFileName) {
+      const args = [];
+      if (videoOperations.trim) {
+        args.push('-ss', String(videoOperations.trim.start));
+        args.push('-t', String(videoOperations.trim.end - videoOperations.trim.start));
+      }
 
-function formatTime(s) {
-  const m = Math.floor(s / 60);
-  return `${m}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
-}
+      const filters = [];
+      if (videoOperations.effect) {
+        switch (videoOperations.effect) {
+          case 'grayscale': filters.push('hue=s=0'); break;
+          case 'blur': filters.push('boxblur=5:1'); break;
+          case 'sharpen': filters.push('unsharp=5:5:1.0:5:5:0.0'); break;
+          case 'vintage': filters.push('curves=vintage'); break;
+        }
+      }
+      if (videoOperations.resize) {
+        const [w, h] = videoOperations.resize.split('x');
+        filters.push(`scale=${w}:${h}`);
+      }
+      if (filters.length) args.push('-vf', filters.join(','));
 
-function showProcessingModal() {
-  processingModal.style.display = 'flex';
-  progressBarFill.style.width = '0%';
-  progressText.textContent = 'Initializing FFmpeg…';
-}
-function hideProcessingModal() { processingModal.style.display = 'none'; }
-function updateProgress(pct, text) {
-  progressBarFill.style.width = `${pct}%`;
-  progressText.textContent = text;
-}
-function showOutput() {
-  outputVideo.src = processedVideoURL;
-  outputSection.style.display = 'block';
-  editorSection.style.display = 'none';
-}
+      if (videoOperations.mute) {
+        args.push('-an');
+      } else if (videoOperations.volume !== 100) {
+        args.push('-af', `volume=${videoOperations.volume / 100}`);
+      }
 
-function showNotification(message, type = 'success') {
-  const n = document.createElement('div');
-  n.className = `notification ${type}`;
-  n.textContent = message;
-  document.body.appendChild(n);
-  setTimeout(() => {
-    n.style.animation = 'slideOut 0.25s cubic-bezier(0.16,1,0.3,1) both';
-    setTimeout(() => n.remove(), 260);
-  }, 3000);
-}
+      if (videoOperations.format === 'gif') {
+        args.push('-pix_fmt', 'rgb24', '-r', '10');
+      } else if (videoOperations.format === 'webm') {
+        args.push('-c:v', 'libvpx', '-crf', '10', '-b:v', '1M');
+        if (!videoOperations.mute) args.push('-c:a', 'libvorbis');
+      } else {
+        args.push('-c:v', 'libx264', '-preset', 'medium', '-crf', '23', '-pix_fmt', 'yuv420p');
+        if (!videoOperations.mute) args.push('-c:a', 'aac', '-b:a', '128k');
+      }
 
-window.addEventListener('load', () => {
-  if (!window.SharedArrayBuffer) {
-    const status = document.getElementById('ffmpegStatus');
-    status.textContent = 'Note: For best results, use Chrome or Firefox.';
-    status.style.color = '#da7101';
-  }
-  uploadArea.style.opacity = '0.5';
-  uploadArea.style.pointerEvents = 'none';
-  autoLoadFFmpeg();
-});
+      if (videoOperations.format === 'mov') args.push('-f', 'mov');
+      if (videoOperations.format === 'avi') args.push('-f', 'avi');
+      args.push(outputFileName);
+      return args;
+    }
 
-console.log('Single-file Vercel version loaded');
-</script>
+    async function handleExport() {
+      if (!currentVideoFile) {
+        showNotification('請先上傳影片。', 'error');
+        return;
+      }
+
+      showProcessingModal();
+      try {
+        updateProgress(5, '初始化 FFmpeg…');
+        await initFFmpeg();
+
+        ffmpeg.setProgress(({ ratio }) => {
+          const pct = Math.min(99, Math.max(0, Math.round(ratio * 100)));
+          updateProgress(pct, `處理中… ${pct}%`);
+        });
+
+        const inputExt = currentVideoFile.name.split('.').pop().toLowerCase();
+        const inputFileName = `input.${inputExt}`;
+        const outputFileName = `output.${videoOperations.format}`;
+
+        updateProgress(12, '寫入原始影片…');
+        ffmpeg.FS('writeFile', inputFileName, await fetchFile(currentVideoFile));
+
+        updateProgress(22, '建立處理指令…');
+        const args = buildFFmpegArgs(inputFileName, outputFileName);
+
+        updateProgress(30, '開始轉檔…');
+        await ffmpeg.run('-i', inputFileName, ...args);
+
+        updateProgress(92, '輸出檔案整理中…');
+        const data = ffmpeg.FS('readFile', outputFileName);
+        const mime = videoOperations.format === 'gif' ? 'image/gif' : `video/${videoOperations.format}`;
+        const blob = new Blob([data.buffer], { type: mime });
+
+        if (processedVideoURL) URL.revokeObjectURL(processedVideoURL);
+        processedVideoURL = URL.createObjectURL(blob);
+
+        try { ffmpeg.FS('unlink', inputFileName); } catch (e) {}
+        try { ffmpeg.FS('unlink', outputFileName); } catch (e) {}
+
+        updateProgress(100, '處理完成');
+        setTimeout(() => {
+          hideProcessingModal();
+          showOutput();
+          showNotification('影片已完成輸出。');
+        }, 420);
+      } catch (error) {
+        console.error(error);
+        hideProcessingModal();
+        if (error?.message?.includes('SharedArrayBuffer')) {
+          showNotification('缺少 SharedArrayBuffer 環境，請確認 Vercel 的 COOP/COEP header 設定。', 'error');
+        } else if (error?.message?.includes('memory')) {
+          showNotification('記憶體不足，請嘗試較小的影片檔。', 'error');
+        } else {
+          showNotification(`影片處理失敗：${error.message || '未知錯誤'}`, 'error');
+        }
+      }
+    }
+
+    function handleReset() {
+      videoOperations = {
+        trim: null,
+        effect: null,
+        resize: null,
+        format: 'mp4',
+        mute: false,
+        volume: 100
+      };
+      startTimeInput.value = 0;
+      endTimeInput.value = videoPlayer.duration ? Math.floor(videoPlayer.duration) : '';
+      document.getElementById('resizeSelect').value = '';
+      document.getElementById('formatSelect').value = 'mp4';
+      volumeSlider.value = 100;
+      volumeValue.textContent = '100%';
+      document.getElementById('muteBtn').textContent = '移除音訊';
+      document.querySelectorAll('.effect-btn').forEach((btn) => btn.classList.remove('active'));
+      showNotification('已重設全部設定。');
+    }
+
+    function handleDownload() {
+      if (!processedVideoURL) return;
+      const a = document.createElement('a');
+      a.href = processedVideoURL;
+      a.download = `edited_video_${Date.now()}.${videoOperations.format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function handleNewVideo() {
+      handleReset();
+      currentVideoFile = null;
+      if (currentVideoURL) URL.revokeObjectURL(currentVideoURL);
+      if (processedVideoURL) URL.revokeObjectURL(processedVideoURL);
+      currentVideoURL = null;
+      processedVideoURL = null;
+      videoInput.value = '';
+      resetVideoMetaPanel();
+      document.getElementById('videoMetaPanel').style.display = 'none';
+      editorSection.style.display = 'none';
+      outputSection.style.display = 'none';
+      uploadSection.style.display = 'block';
+      videoName.textContent = '—';
+      videoDuration.textContent = '—';
+      videoPlayer.removeAttribute('src');
+      outputVideo.removeAttribute('src');
+      videoPlayer.load();
+      outputVideo.load();
+      showNotification('可以開始上傳新的影片。');
+    }
+
+    function showProcessingModal() {
+      processingModal.style.display = 'flex';
+      updateProgress(0, '初始化中…');
+    }
+
+    function hideProcessingModal() {
+      processingModal.style.display = 'none';
+    }
+
+    function updateProgress(percent, text) {
+      progressBarFill.style.width = `${percent}%`;
+      progressText.textContent = text;
+      progressPercent.textContent = `${percent}%`;
+    }
+
+    function showOutput() {
+      outputVideo.src = processedVideoURL;
+      outputSection.style.display = 'block';
+      editorSection.style.display = 'none';
+      outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function showNotification(message, type = 'success') {
+      const el = document.createElement('div');
+      el.className = `notification ${type}`;
+      el.textContent = message;
+      document.body.appendChild(el);
+      setTimeout(() => {
+        el.style.animation = 'slideOut .24s cubic-bezier(0.16, 1, 0.3, 1) both';
+        setTimeout(() => el.remove(), 250);
+      }, 2600);
+    }
+
+    window.addEventListener('load', () => {
+      if (!window.SharedArrayBuffer) {
+        setStatus('目前瀏覽器環境未完整支援 SharedArrayBuffer，請確認部署 header，建議使用 Chrome 或 Firefox。', '注意', 'loading');
+      }
+      autoLoadFFmpeg();
+    });
+  </script>
 </body>
 </html>
