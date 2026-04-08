@@ -109,6 +109,49 @@
       color: var(--color-text-muted);
     }
 
+    .video-meta-panel {
+      margin-top: var(--space-4);
+      padding: var(--space-4);
+      background: var(--color-surface-2);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+    }
+
+    .video-meta-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .video-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: var(--space-3);
+    }
+
+    .video-meta-item {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+    }
+
+    .video-meta-label {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .video-meta-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--color-text);
+      word-break: break-word;
+    }
+
     .controls-section {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -317,6 +360,36 @@
       <span id="videoDuration"></span>
     </div>
 
+    <div id="videoMetaPanel" class="video-meta-panel" style="display:none;">
+      <div class="video-meta-title">Video Details</div>
+      <div class="video-meta-grid">
+        <div class="video-meta-item">
+          <div class="video-meta-label">Format</div>
+          <div class="video-meta-value" id="metaFormat">—</div>
+        </div>
+        <div class="video-meta-item">
+          <div class="video-meta-label">File Size</div>
+          <div class="video-meta-value" id="metaSize">—</div>
+        </div>
+        <div class="video-meta-item">
+          <div class="video-meta-label">Duration</div>
+          <div class="video-meta-value" id="metaDurationFull">—</div>
+        </div>
+        <div class="video-meta-item">
+          <div class="video-meta-label">FPS</div>
+          <div class="video-meta-value" id="metaFps">—</div>
+        </div>
+        <div class="video-meta-item">
+          <div class="video-meta-label">Resolution</div>
+          <div class="video-meta-value" id="metaResolution">—</div>
+        </div>
+        <div class="video-meta-item">
+          <div class="video-meta-label">Filename</div>
+          <div class="video-meta-value" id="metaFilename">—</div>
+        </div>
+      </div>
+    </div>
+
     <div class="controls-section">
       <div class="control-card">
         <h3>Trim</h3>
@@ -418,6 +491,73 @@ let videoOperations = {
   mute: false,
   volume: 100
 };
+let detectedFPS = null;
+
+function formatBytes(bytes) {
+  if (!bytes && bytes !== 0) return '—';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  let num = bytes;
+  while (num >= 1024 && i < units.length - 1) {
+    num /= 1024;
+    i++;
+  }
+  return `${num.toFixed(num >= 100 || i === 0 ? 0 : num >= 10 ? 1 : 2)} ${units[i]}`;
+}
+
+function formatDurationFull(seconds) {
+  if (!isFinite(seconds)) return '—';
+  const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+  const m = Math.floor((seconds / 60) % 60).toString().padStart(2, '0');
+  const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+  return h === '00' ? `${m}:${s}` : `${h}:${m}:${s}`;
+}
+
+function getExtension(filename) {
+  const parts = filename.split('.');
+  return parts.length > 1 ? parts.pop().toLowerCase() : '—';
+}
+
+function updateMetaField(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value ?? '—';
+}
+
+function resetVideoMetaPanel() {
+  updateMetaField('metaFormat', '—');
+  updateMetaField('metaSize', '—');
+  updateMetaField('metaDurationFull', '—');
+  updateMetaField('metaFps', '—');
+  updateMetaField('metaResolution', '—');
+  updateMetaField('metaFilename', '—');
+}
+
+function showVideoMetaPanel() {
+  const panel = document.getElementById('videoMetaPanel');
+  if (panel) panel.style.display = 'block';
+}
+
+function parseFPSFromLog(message) {
+  if (!message) return null;
+  const patterns = [
+    /,\s*([\d.]+)\s*fps\b/i,
+    /Stream.*?([\d.]+)\s*fps\b/i,
+    /([\d.]+)\s*tbr\b/i
+  ];
+  for (const regex of patterns) {
+    const match = message.match(regex);
+    if (match && match[1]) {
+      const fps = parseFloat(match[1]);
+      if (fps > 0 && fps < 1000) return fps;
+    }
+  }
+  return null;
+}
+
+function updateFPSDisplay(fps) {
+  detectedFPS = fps;
+  updateMetaField('metaFps', fps ? `${fps} fps` : '—');
+}
 
 async function initFFmpeg() {
   if (!ffmpeg) {
@@ -427,13 +567,19 @@ async function initFFmpeg() {
     ffmpeg = createFFmpeg({
       log: true,
       corePath: coreUrl,
-    });
-      if (!ffmpeg.isLoaded()) {
-        await ffmpeg.load();
-        ffmpegLoaded = true;
-        console.log('FFmpeg loaded successfully');
+      logger: ({ type, message }) => {
+        console.log(`[${type}] ${message}`);
+        const fps = parseFPSFromLog(message);
+        if (fps && !detectedFPS) {
+          updateFPSDisplay(fps);
+        }
       }
-
+    });
+    if (!ffmpeg.isLoaded()) {
+      await ffmpeg.load();
+      ffmpegLoaded = true;
+      console.log('FFmpeg loaded successfully');
+    }
   }
   return ffmpeg;
 }
@@ -541,16 +687,54 @@ document.querySelectorAll('.effect-btn').forEach(btn => {
 async function handleVideoFile(file) {
   currentVideoFile = file;
   currentVideoURL = URL.createObjectURL(file);
+  detectedFPS = null;
+
+  resetVideoMetaPanel();
+  showVideoMetaPanel();
+
   videoPlayer.src = currentVideoURL;
   videoName.textContent = file.name;
+
+  const ext = getExtension(file.name).toUpperCase();
+  const mime = file.type || 'unknown';
+  updateMetaField('metaFilename', file.name);
+  updateMetaField('metaFormat', ext !== '—' ? `${ext} (${mime})` : mime);
+  updateMetaField('metaSize', formatBytes(file.size));
+  updateMetaField('metaFps', '—');
+
   document.getElementById('uploadSection').style.display = 'none';
   editorSection.style.display = 'block';
-  videoPlayer.addEventListener('loadedmetadata', () => {
+
+  videoPlayer.addEventListener('loadedmetadata', async () => {
     const duration = videoPlayer.duration;
+    const width = videoPlayer.videoWidth;
+    const height = videoPlayer.videoHeight;
+
     videoDuration.textContent = formatTime(duration);
     endTimeInput.value = Math.floor(duration);
     endTimeInput.max = duration;
     startTimeInput.max = duration;
+
+    updateMetaField('metaDurationFull', formatDurationFull(duration));
+    updateMetaField('metaResolution', width && height ? `${width} × ${height}` : '—');
+
+    try {
+      await initFFmpeg();
+      const inputExt = file.name.split('.').pop().toLowerCase();
+      const probeName = `probe.${inputExt}`;
+      ffmpeg.FS('writeFile', probeName, await fetchFile(file));
+      try {
+        await ffmpeg.run('-i', probeName);
+      } catch (e) {
+      }
+      try {
+        ffmpeg.FS('unlink', probeName);
+      } catch (e) {}
+      if (!detectedFPS) updateFPSDisplay(null);
+    } catch (err) {
+      console.warn('FPS detection failed:', err);
+      updateFPSDisplay(null);
+    }
   }, { once: true });
 }
 
@@ -715,6 +899,8 @@ function handleNewVideo() {
   editorSection.style.display = 'none';
   outputSection.style.display = 'none';
   videoInput.value = '';
+  resetVideoMetaPanel();
+  document.getElementById('videoMetaPanel').style.display = 'none';
 }
 
 function formatTime(s) {
