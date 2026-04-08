@@ -421,11 +421,13 @@ let videoOperations = {
 
 async function initFFmpeg() {
   if (!ffmpeg) {
-    try {
-      ffmpeg = createFFmpeg({
-        log: true,
-        corePath: '/ffmpeg/ffmpeg-core.js',
-      });
+    const baseUrl = window.location.origin;
+    const coreUrl = `${baseUrl}/ffmpeg/ffmpeg-core.js`;
+
+    ffmpeg = createFFmpeg({
+      log: true,
+      corePath: coreUrl,
+    });
       if (!ffmpeg.isLoaded()) {
         await ffmpeg.load();
         ffmpegLoaded = true;
